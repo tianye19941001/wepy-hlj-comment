@@ -1,0 +1,113 @@
+<style lang="less">
+.comment-list {
+  .no-result {
+    position: static;
+
+    .icon {
+      margin-top: 40rpx;
+      font-size: 50rpx;
+    }
+  }
+}
+</style>
+
+<template>
+  <view class="comment-list">
+    <repeat for="{{comments}}" item="item" index="index" key="index">
+      <CommentItem :item.sync="item" @zoomIn.user="zoomIn"></CommentItem>
+      <hr class="sub-section-divider" />
+    </repeat>
+
+    <view wx:if="{{comments.length === 0}}" class="no-result">
+      <i class="icon">&#xe63e;</i>暂无评价
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy        from 'wepy';
+  import CommentItem from './commentItem';
+  import moment      from 'moment';
+  import flatmap     from 'lodash.flatmap';
+
+  export default class CommentList extends wepy.component {
+    props = {
+      list: {
+        type: Array
+      }
+    }
+    computed = {
+      comments() {
+        if (!this.list) {
+          return;
+        }
+        this.list.map((o) => {
+          const comments = o.comments;
+          const time = o.comments[0].createAt;
+          comments.map((c, i) => {
+            comments[i].createDate = moment(c.createAt).format('YYYY-MM-DD HH:mm');
+            if (i !== 0) {
+              const diff = moment(c.createAt).diff(moment(time), 'days');
+              comments[i].relativeDate = diff <= 0 ? '当天' : diff + '天后';
+            }
+          });
+        });
+        return this.list;
+      },
+      getAllPhotos() {
+        if (!this.list) {
+          return;
+        }
+        const photos = [];
+        this.list.map((o) => {
+          const comments = o.comments;
+          comments.map((c) => {
+            const imgs = c.largePhotos;
+            imgs.map((p) => {
+              photos.push({
+                content: c.contents,
+                photo: p
+              });
+            });
+          });
+        });
+
+        wepy.setStorage({
+          key: 'comment-photos',
+          data: JSON.stringify(photos)
+        });
+      }
+    }
+
+    components = {
+      CommentItem
+    }
+
+    methods = {
+      zoomIn(url) {
+        this.$root.$preload('slideContents', this.buildSlide(url));
+        // 由于用户习惯看完图片返回，所以确保 能返回
+        this.$root.$navigate('/pages/slide');
+      }
+    }
+
+    buildSlide(url) {
+      const slides = flatmap(
+        this.comments,
+        cmt => {
+          const photos = flatmap(cmt.comments, 'photos');
+          return photos.map(p => ({
+            image: p,
+            desc: cmt.comments[0].contents
+          }));
+        }
+      );
+      return {
+        slides,
+        current: slides.findIndex(o => o.image === url),
+        title: '用户评价'
+      };
+    }
+
+  }
+</script>

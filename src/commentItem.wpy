@@ -1,0 +1,178 @@
+<style lang="less">
+.comment-item {
+  padding: .75rem;
+
+  .comment-user {
+    .artisan-img {
+      width: 2rem;
+      height: 2rem;
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 50%;
+    }
+  }
+  .comment-user-info {
+    display: inline-block;
+    margin-left: 0.65rem;
+    line-height: 100%;
+    vertical-align: middle;
+    line-height: 1.5;
+    p {
+      margin: 0.1rem 0;
+    }
+    .nick {
+      color: #666;
+
+      .level-img {
+        display: inline-block;
+        margin-left: 0.25rem;
+        width: 1.8rem;
+        height: .855rem;
+        position: relative;
+        top: 2px;
+      }
+    }
+  }
+  .comment-content {
+    margin: 20rpx 0;
+    word-break: break-word;
+    white-space: pre-wrap;
+    display: block;
+    font-size: 26rpx;
+  }
+  .comment-img {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    margin-top: 0.5rem;
+    .product-img {
+      width: 3.25rem;
+      height: 3.25rem;
+      display: inline-block;
+      margin-right: 0.5rem;
+      overflow: hidden;
+    }
+  }
+
+  .comment-date-buy{
+    margin-top: 10rpx;
+
+    .comment-date {
+      color: #999;
+    }
+    .comment-pdname {
+      display: inline-block;
+      max-width: 440rpx;
+      color: #bd9d62;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-left: 30rpx;
+      vertical-align: middle;
+      font-size: 26rpx;
+      
+    }
+  }
+  .recomment-title {
+    margin: 0.5rem 0;
+    color: #f73831;
+    font-size: 26rpx;
+  }
+  .recomment-content {
+    margin: 0;
+    word-wrap:break-word;
+    white-space: pre-wrap;
+  }
+  .artisan-reply-wrap {
+    position: relative;
+    margin-top: 30rpx;
+    &:after {
+      content: '';
+      position: absolute;
+      left: 7%;
+      top: -30rpx;
+      border: 16rpx solid transparent;
+      border-bottom-color: #f7f7f7;
+      width: 0rpx;
+      height: 0;
+      overflow: hidden;
+      transform:translateX(-16rpx);
+    }
+  }
+  .avatar-comment-wrap {
+    background-color: #f7f7f7;
+    border-radius: 3px;
+    padding: 0.65rem;
+    margin: 0;
+    font-size: 26rpx;
+    word-break: break-word;
+  }
+}
+
+</style>
+
+<template>
+  <section class="comment-item">
+    <view class="comment-user">
+      <image class="artisan-img" src="{{item.user.avatar}}" mode="aspectFill"></image>
+      <view class="small comment-user-info">
+        <view class="nick">
+          {{item.user.nick || item.user.mobile}}
+          <image wx:if="{{item.user.levelImageUrl}}" mode="widthFix" class="level-img" src="{{item.user.levelImageUrl}}" height="1em" />
+        </view>
+        <view class="gold star">{{item.score.desc}} </view>
+      </view>
+    </view>
+    <repeat for="{{item.comments}}" index="index" key="index" item="comment">
+      <view wx:if="{{index !== 0}}" class="recomment-title">用户{{comment.relativeDate}}追评</view>
+      <rich-text class="comment-content" nodes="{{item.comments[0].contents}}"></rich-text>
+      <view wx:if="{{comment.photos && (comment.photos.length > 0)}}" class="comment-img">
+        <repeat for="{{comment.photos}}" index="idx" key="idx" item="img">
+        <image src="{{img}}" mode="aspectFill" class="product-img" @tap="showLarge" data-url="{{img}}"></image>
+        </repeat>
+      </view>
+
+      <view wx:if="{{index === 0 && item.user.anonymouse !== '1'}}" class="comment-date-buy">
+        <text class="small muted comment-date">{{comment.createDate}}</text>
+        <view @tap="jumpToProduct({{item.product.productId}})" class="comment-pdname">
+          购买项目：{{item.product.name}}
+        </view>
+      </view>
+
+      <view wx:if="{{comment.reply.contents}}" class="artisan-reply-wrap">
+        <view class="avatar-comment-wrap">手艺人回复：{{comment.reply.contents}}</view>
+      </view>
+    </repeat>
+  </section>
+</template>
+
+<script>
+  import wepy from 'wepy';
+
+  export default class CommentItem extends wepy.component {
+    props = {
+      item: {
+        type: Object,
+        default: {
+          user: {},
+          comments: [],
+          score: {},
+          product: {}
+        }
+      }
+    }
+
+    data = {
+    }
+
+    methods = {
+      showLarge({ currentTarget }) {
+        this.$emit('zoomIn', currentTarget.dataset.url);
+      },
+      jumpToProduct(id) {
+        this.$invoke(this.$parent.$parent, 'navToWeapp', `/pages/product?id=${id}`);
+        
+      }
+    }
+  }
+</script>

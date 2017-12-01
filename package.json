@@ -1,0 +1,11 @@
+{
+  "name": "wepy-hlj-comment",
+  "version": "0.0.1",
+  "description": "helijia",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
